@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo de Viaje</title>
+    <!-- Integración con Font Awesome para iconos profesionales -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f0f8ff;
+            --grid-bg: #ffffff;
+            --accent-color: #ff6347;
+            --accent-dark: #e0553c;
+            --text-color: #333;
+            --border-color: #add8e6;
+            --selected-bg: #98fb98;
+            --selected-border: #3cb371;
+            --font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            margin: 0;
+            padding: 15px;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #controls {
+            margin-bottom: 20px;
+        }
+
+        #new-game-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-family: var(--font-family);
+            color: white;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        #new-game-btn:hover {
+            background-color: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
+        #bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        .grid-cell {
+            background-color: var(--grid-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            padding: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .grid-cell:not(.selected):hover {
+            transform: scale(1.05);
+        }
+
+        .grid-cell.selected {
+            background-color: var(--selected-bg);
+            border-color: var(--selected-border);
+            transform: scale(0.95);
+        }
+        
+        .grid-cell.selected .icon-name {
+            text-decoration: line-through;
+        }
+
+        .grid-cell .icon-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5em; /* Tamaño del icono */
+        }
+        
+        .icon-name {
+            font-size: 0.8em;
+            margin-top: 5px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        #bingo-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #bingo-message {
+            font-size: 10vw;
+            color: white;
+            text-shadow: 0 0 10px #ff6347, 0 0 20px #ff6347, 0 0 30px #ff6347;
+            animation: bingo-animation 1s ease-in-out;
+            transform: scale(0);
+        }
+        
+        @keyframes bingo-animation {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Bingo de Viaje</h1>
+    <div id="controls">
+        <button id="new-game-btn">Nuevo Juego</button>
+    </div>
+    <div id="bingo-grid"></div>
+
+    <div id="bingo-modal">
+        <div id="bingo-message">¡BINGO!</div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const ICON_LIBRARY = {
+            'Coche': 'fa-solid fa-car',
+            'Camión': 'fa-solid fa-truck',
+            'Moto': 'fa-solid fa-motorcycle',
+            'Bicicleta': 'fa-solid fa-bicycle',
+            'Tren': 'fa-solid fa-train',
+            'Avión': 'fa-solid fa-plane',
+            'Barco': 'fa-solid fa-ship',
+            'Semáforo': 'fa-solid fa-traffic-light',
+            'Señal Stop': 'fa-solid fa-hand-paper',
+            'Gasolinera': 'fa-solid fa-gas-pump',
+            'Árbol': 'fa-solid fa-tree',
+            'Flor': 'fa-solid fa-fan',
+            'Sol': 'fa-solid fa-sun',
+            'Nube': 'fa-solid fa-cloud',
+            'Montaña': 'fa-solid fa-mountain',
+            'Casa': 'fa-solid fa-house',
+            'Puente': 'fa-solid fa-bridge',
+            'Vaca': 'fa-solid fa-cow',
+            'Caballo': 'fa-solid fa-horse',
+            'Cerdo': 'fa-solid fa-piggy-bank',
+            'Perro': 'fa-solid fa-dog',
+            'Gato': 'fa-solid fa-cat',
+            'Pájaro': 'fa-solid fa-dove',
+            'Mariposa': 'fa-solid fa-bug',
+            'Abeja': 'fa-solid fa-bee',
+            'Helado': 'fa-solid fa-ice-cream',
+            'Castillo': 'fa-solid fa-chess-rook',
+            'Molino': 'fa-solid fa-fan',
+            'Sombrilla': 'fa-solid fa-umbrella-beach',
+            'Policía': 'fa-solid fa-car-on',
+            'Contenedor': 'fa-solid fa-dumpster',
+            'Rotonda': 'fa-solid fa-arrows-rotate',
+            'Caravana': 'fa-solid fa-caravan',
+            'Peligro': 'fa-solid fa-triangle-exclamation',
+            'Autopista': 'fa-solid fa-road',
+            'Flotador': 'fa-solid fa-life-ring',
+            'Prohibido': 'fa-solid fa-ban',
+            'Araña': 'fa-solid fa-spider',
+            'Rana': 'fa-solid fa-frog',
+            'Pez': 'fa-solid fa-fish',
+            // Nuevos iconos añadidos:
+            'Toro': 'fa-solid fa-cow', // Re-usando icono de vaca
+            'Hormiga': 'fa-solid fa-bug', // Re-usando icono de insecto
+            'Yate': 'fa-solid fa-sailboat',
+            'Cometa': 'fa-solid fa-kite',
+            'Pájaro Raro': 'fa-solid fa-kiwi-bird', // Para pájaros más específicos
+            'Viento': 'fa-solid fa-wind',
+            'Velocidad': 'fa-solid fa-gauge-high',
+            'Río': 'fa-solid fa-water',
+            'Volcán': 'fa-solid fa-volcano',
+            'Planta': 'fa-solid fa-leaf',
+            'Planta Joven': 'fa-solid fa-seedling',
+            'Cueva': 'fa-solid fa-igloo' // Representación
+        };
+
+        const grid = document.getElementById('bingo-grid');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const bingoModal = document.getElementById('bingo-modal');
+        const bingoMessage = document.getElementById('bingo-message');
+        
+        let gameState = [];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateGrid() {
+            grid.innerHTML = '';
+            gameState = Array(5).fill(null).map(() => Array(5).fill(false));
+            
+            const allIcons = Object.keys(ICON_LIBRARY);
+            const shuffledIcons = shuffleArray([...allIcons]);
+            const iconsForGrid = shuffledIcons.slice(0, 25);
+
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('grid-cell');
+                cell.dataset.row = Math.floor(i / 5);
+                cell.dataset.col = i % 5;
+
+                const iconContainer = document.createElement('div');
+                iconContainer.classList.add('icon-container');
+
+                const nameSpan = document.createElement('span');
+                nameSpan.classList.add('icon-name');
+
+                const iconName = iconsForGrid[i];
+                const iconClasses = ICON_LIBRARY[iconName];
+                nameSpan.textContent = iconName;
+                iconContainer.innerHTML = `<i class="${iconClasses}"></i>`;
+                cell.addEventListener('click', handleCellClick);
+                
+                cell.appendChild(iconContainer);
+                cell.appendChild(nameSpan);
+                grid.appendChild(cell);
+            }
+        }
+
+        function handleCellClick(event) {
+            const cell = event.currentTarget;
+            cell.classList.toggle('selected');
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            gameState[row][col] = cell.classList.contains('selected');
+            
+            if (checkForBingo()) {
+                showBingoCelebration();
+            }
+        }
+
+        function checkForBingo() {
+            // Check rows and columns
+            for (let i = 0; i < 5; i++) {
+                if (gameState[i].every(cell => cell === true)) return true; // Row check
+                if (gameState.every(row => row[i] === true)) return true; // Column check
+            }
+
+            // Check diagonals
+            if (gameState.every((row, idx) => row[idx] === true)) return true;
+            if (gameState.every((row, idx) => row[4 - idx] === true)) return true;
+
+            return false;
+        }
+
+        function showBingoCelebration() {
+            bingoModal.style.display = 'flex';
+            bingoMessage.style.animation = 'none';
+            bingoMessage.offsetHeight; // Trigger reflow
+            bingoMessage.style.animation = null; 
+            
+            setTimeout(() => {
+                bingoModal.style.display = 'none';
+            }, 3000); // Hide after 3 seconds
+        }
+
+        newGameBtn.addEventListener('click', generateGrid);
+        bingoModal.addEventListener('click', () => bingoModal.style.display = 'none');
+
+        // Initial game generation
+        generateGrid();
+    });
+    </script>
+</body>
+</html>
