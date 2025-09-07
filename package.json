@@ -1,0 +1,19 @@
+{
+  "name": "bingo-viajero",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Bingo viajero - utilidades de desarrollo",
+  "scripts": {
+    "svgo:images10": "svgo -f images10 --config=svgo.config.js --multipass",
+    "svgo:images11": "svgo -f images11 --config=svgo.config.js --multipass",
+    "svgo:all": "npm run svgo:images10 && npm run svgo:images11",
+    "webp:photos": "bash -lc 'for d in images08 images12; do for f in \"$d\"/*.{jpg,jpeg,png,JPG,JPEG,PNG}; do [ -f \"$f\" ] || continue; cwebp -q 82 \"$f\" -o \"${f%.*}.webp\"; done; done'",
+    "webp:signals": "bash -lc 'for f in images07/*.png; do [ -f \"$f\" ] || continue; cwebp -lossless -m 6 \"$f\" -o \"${f%.*}.webp\"; done'",
+    "webp:all": "npm run webp:photos && npm run webp:signals",
+    "webp:thumbs": "bash -lc 'for d in images07 images08 images12; do for f in \"$d\"/*.{jpg,jpeg,JPG,JPEG}; do [ -f \"$f\" ] || continue; tmp=\"${f%.*}.tmp.jpg\"; sips -Z 640 \"$f\" --out \"$tmp\" >/dev/null; cwebp -q 82 \"$tmp\" -o \"${f%.*}.webp\"; rm -f \"$tmp\"; done; done'"
+  },
+  "devDependencies": {
+    "cwebp-bin": "^8.0.0",
+    "svgo": "^3.3.2"
+  }
+}
